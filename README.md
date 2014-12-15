@@ -22,7 +22,11 @@ For collecting the news twitter data, set the news agent twitter account that yo
 Start collecting twitter data by running `python twitter.py`
 
 ### Classifier
-We configured a Stochastic Gradient Descent (SGD) classifier to classify twitter posts. The classifier should be trained using a set of categorized news. We use a number of news agencies as our source of training data.
+We configured a Stochastic Gradient Descent (SGD) classifier to classify twitter posts. The classifier should be trained using a set of categorized news. We use a number of news agencies as our source of training data. To train the classifier, test the classifier or run predictions use
+
+    ./bin/pyspark spark-scripts/train.py --py-files spark-scripts/preprocessing.py
+    ./bin/pyspark spark-scripts/test.py --py-files spark-scripts/preprocessing.py
+    ./bin/pyspark spark-scripts/predict.py --py-files spark-scripts/preprocessing.py
 
 ### Visualization analysis
 We visualize the classified tweets by finding the top 10 frequent terms per hour and showing them on a [web page](http://aliavi.com/twnews/bigdata/graph/visualization/). 
