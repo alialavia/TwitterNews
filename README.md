@@ -18,8 +18,13 @@ For collecting the news twitter data, set the news agent twitter account that yo
 Start collecting twitter data by running `python twitter.py`
 
 ### Classifier
+We configured a Stochastic Gradient Descent (SGD) classifier to classify twitter posts. The classifier should be trained using a set of categorized news. We use a number of news agencies as our source of training data.
 
+### Data Collector
+Our data collection consists of two parts: 
+* Training data, from news agencies, which are collected from their Twitter accounts 
+* Unlabeled twitter data is collected over a time span of two months, with a ten-day break in between due to server maintainance. The data is stored as a set of 100,000-tweet files. Later on, we classify this data using our classifier.
 
 ### Visualization analysis
-
+We visualize the classified tweets by finding the top 10 frequent terms per hour and showing them on a [web page](http://aliavi.com/twnews/bigdata/graph/visualization/). 
 
