@@ -11,7 +11,11 @@ Three components are included in this system:
 * Visualization of news key-terms over time
 
 ### Data Collector
-In order to run the `data-collectors` scritp to collect twitter data from [Twitter Streams](https://dev.twitter.com/streaming/public), you need to register your own twitter app key first. The api key should be set in two files: `data-collectors/twitter/twitter.py` and `data-collectors/news/twitter/twitternews.config`. 
+Our data collection consists of two parts: 
+* Training data, from news agencies, which are collected from their Twitter accounts 
+* Unlabeled twitter data is collected over a time span of two months, with a ten-day break in between due to server maintainance. The data is stored as a set of 100,000-tweet files. Later on, we classify this data using our classifier.
+
+In order to run the `data-collectors` script to collect twitter data from [Twitter Streams](https://dev.twitter.com/streaming/public), you need to register your own twitter app key first. The api key should be set in two files: `data-collectors/twitter/twitter.py` and `data-collectors/news/twitter/twitternews.config`. 
 
 For collecting the news twitter data, set the news agent twitter account that you are interest under `data-collectors/news/twitter/twitternews.config`. The config file is in JSON format. Edit the `accounts` section, put the news agent display name under the node `screen_name` and the file path where your data is going to be stored under the node `path`.
 
@@ -19,11 +23,6 @@ Start collecting twitter data by running `python twitter.py`
 
 ### Classifier
 We configured a Stochastic Gradient Descent (SGD) classifier to classify twitter posts. The classifier should be trained using a set of categorized news. We use a number of news agencies as our source of training data.
-
-### Data Collector
-Our data collection consists of two parts: 
-* Training data, from news agencies, which are collected from their Twitter accounts 
-* Unlabeled twitter data is collected over a time span of two months, with a ten-day break in between due to server maintainance. The data is stored as a set of 100,000-tweet files. Later on, we classify this data using our classifier.
 
 ### Visualization analysis
 We visualize the classified tweets by finding the top 10 frequent terms per hour and showing them on a [web page](http://aliavi.com/twnews/bigdata/graph/visualization/). 
