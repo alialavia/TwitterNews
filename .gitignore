@@ -1,0 +1,19 @@
+# Ignore OSX specific files
+*.DS_Store
+
+# Ignore python compiled files
+*.pyc
+
+# Ignore pycharm IDE
+.idea
+
+# Ignore data folders
+data/
+logs/
+
+# Ignore log files
+*.log
+
+# Ignore backup files
+*.bak
+

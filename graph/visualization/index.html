@@ -1,0 +1,314 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js"></script>
+
+<script src="http://d3js.org/d3.v3.js"></script>
+<script>
+// IMPORTANT: Do not remove or misplace this. The order of these includes is important.
+  var d3chart = d3;
+</script>
+<script src="../../../d3-cloud/lib/d3/d3.js"></script>
+<script src="../../../d3-cloud/d3.layout.cloud.js"></script>
+
+<link href="nouislider/jquery.nouislider.min.css" rel="stylesheet">
+<link href="nouislider/jquery.nouislider.pips.min.css" rel="stylesheet">
+
+<link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+
+
+<script src="nouislider/jquery.nouislider.all.min.js"></script>
+<link href="timechart.css" rel="stylesheet">
+<script src="timechart.js"></script>
+
+<script>
+
+var startdate = new Date();
+var timeline_length;
+
+function setupSlider()
+{
+      $("#slider-date").noUiSlider({
+    // Create two timestamps to define a range.
+        range: {
+            min: 0,
+            max: timeline_length
+        },
+      
+        step: 1,
+
+    // Two more timestamps indicate the handle starting positions.
+        start: 0 ,
+      
+    // No decimals
+      format: wNumb({
+        decimals: 0
+      })
+    });
+
+    $("#slider-date").Link('lower').to($("#event-start"), setDate);
+}
+var width = 400;
+var fill = d3.scale.category20();
+function draw(words, id) {
+    d3.select(id).html("")
+    d3.select(id).append("svg")
+        .attr("width", width)
+        .attr("height", width)
+      .append("g")
+        .attr("transform", "translate(200, 200)")
+      .selectAll("a")
+        .data(words)
+      .enter()
+        .append("text")
+        .attr("onclick", function(d) {
+          return "showchart('" + d.text + "', '" + id +"')";})
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return fill(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text;});
+  }
+function LayoutWordCloud(words, id)
+{
+  //console.log(words)
+  d3.layout.cloud().size([width, width])
+    .words(words)
+    .padding(5)
+    .rotate(function() { return ~~(Math.random() * 10) * 10 ; })
+    .font("Impact")
+    .fontSize(function(d) { return d.size; })
+    .on("end", function (words) { draw(words, id); } )
+    .start();
+}
+function getBaseLog(x, y) {
+    return Math.log(y) / Math.log(x);
+}
+function dicttoarray(dict)
+{
+  if(jQuery.isEmptyObject(dict))
+    return [{ text: 'Empty', size:50 }];
+  var a = Array();
+  var i = 0;
+  for (word in dict)
+  {
+    var s = 0;
+    if (dict[word]!=0)
+      s = Math.floor(getBaseLog(max, dict[word]) * 30) 
+
+    a[i++] =  { text: word, size: 30};
+    
+    console.log(word, dict[word], max, s)
+  }
+  return a;
+}
+var timeseries;
+function showclouds(timeindex)
+{
+  for (category in timeseries)
+    LayoutWordCloud(dicttoarray(timeseries[category][timeindex]), '#div-'+category);
+}
+var max = 0;
+function jsonLoaded(data)
+{  
+  startdate = new Date(data[0].replace(' ', 'T') + 'Z');
+
+  //console.log(startdate.getFullYear());
+  //console.log(startdate.getTime());
+  var index;
+  timeseries = data[2]
+  timeline_length = timeseries["politics"].length  
+  
+  // find maximum
+  max = 0;
+  for (category in timeseries)
+    for (i=0;i<timeseries[category].length;i++)
+      for (tag in timeseries[category][i])
+      {
+        //console.log(max, f)
+        var f = timeseries[category][i][tag];
+        max = f > max ? f : max ;
+
+      }
+  // initialize clouds
+  showclouds(0);
+
+  //console.log(max);
+
+  // initialize
+  for (category in timeseries)
+    showchart(timeseries[category][0], '#div-'+category);
+  /*
+  showchart(timeseries["sports"][0], '#div-sports');
+  showchart(timeseries["technology"][0], '#div-technology');
+  */
+  setupSlider();
+  //console.log (words);  
+
+  //
+}
+var repeats = null;
+function autotime()
+{
+  var timeIndex = lastSlideVal;
+  if (repeats == null)
+  {
+    btnAuto.value="Stop";
+    $("#slider-date").hide();
+    repeats = setInterval(
+      function () { 
+        do 
+        {
+          words = dicttoarray(timeseries["politics"][timeIndex++]);
+        } while (words[0].text=='Empty')
+        showclouds(timeIndex-1);
+        $("#event-start").html(formatDate(timeIndex-1))
+       
+      }, 
+      1000);
+    
+  }
+  else
+  {
+    btnAuto.value="Run";
+    clearInterval(repeats);
+    $("#slider-date").show();
+    repeats = null;
+  }
+
+}
+
+// Create a new date from a string, return as a timestamp.
+function timestamp(str){
+    return new Date(str).getTime();   
+}
+// Create a list of day and monthnames.
+var
+  weekdays = [
+    "Sunday", "Monday", "Tuesday",
+    "Wednesday", "Thursday", "Friday",
+    "Saturday"
+  ],
+  months = [
+    "January", "February", "March",
+    "April", "May", "June", "July",
+    "August", "September", "October",
+    "November", "December"
+  ];
+
+// Append a suffix to dates.
+// Example: 23 => 23rd, 1 => 1st.
+function nth (d) {
+  if(d>3 && d<21) return 'th';
+  switch (d % 10) {
+        case 1:  return "st";
+        case 2:  return "nd";
+        case 3:  return "rd";
+        default: return "th";
+    }
+}
+
+// Create a string representation of the date.
+function formatDate ( value ) {
+   return (new Date(startdate.getTime()+value*60*60*1000))
+}
+
+
+// Write a date as a pretty value.
+var lastSlideVal = 0;
+
+function setDate( value ){
+    lastSlideVal = parseInt(value);
+    //console.log($("#slider-date").html());
+    $(this).html(formatDate(lastSlideVal)); 
+    showclouds(lastSlideVal);
+    //d3.select("#cloud1").select("svg").select("g").selectAll("text").data(words).enter()
+    //draw()
+    //console.log(value);
+    /*for (word in words)
+      console.log("W=" + words[word].text + " F=" + words[word].size);*/
+}
+var timespan = 5
+function showchart(tag, p)
+{
+  var i = 0, data = [];
+  var category = p.substring(5)
+  var starttime = Math.max(lastSlideVal-timespan, 0)
+  var endtime = Math.min(lastSlideVal+timespan, timeline_length)
+
+  for (i = starttime; i < endtime; i++)
+    if (isNaN(timeseries[category][i][tag]))
+      data[i-starttime] = {date:formatDate(i), freq:0};
+    else
+      data[i-starttime] = {date:formatDate(i), freq:timeseries[category][i][tag]};
+
+    drawChart(data, "#chart-" + category)
+   
+}
+</script>
+<style>
+body {
+  font-family: 'Raleway', serif;
+  font-size: 9pt
+}
+.inline {
+  display: inline-block;
+}
+.inline img { 
+  display: block; 
+  margin: auto;
+  height: 100px;
+  top: 0;
+}
+
+.chart {
+  display: block;
+  width: 400px;
+  height: 250px;
+}
+</style>
+</head> 
+<body>
+
+
+
+    <div class="inline" left="0">
+      <img src="http://img1.wikia.nocookie.net/__cb20131031102340/de.simpsons/images/7/7e/Burns.png">
+      <div id="div-politics"></div>
+      <div class="chart" id="chart-politics"></div>
+    </div>
+    <div class="inline" left="400">
+      <img src="http://s1.totalprosports.com/wp-content/uploads/2009/12/Bart-Simpson-sports-2-339x400.jpg">
+      <div id="div-sports"></div>
+      <div class="chart" id="chart-sports"></div>
+    </div>
+    <div class="inline" left="800">
+      <img src="https://c2.staticflickr.com/8/7053/6929586065_d8516a1621_z.jpg">
+      <div id="div-technology"></div>
+      <div class="chart" id="chart-technology"></div>
+    </div>
+    
+    
+
+    <div id="slider-date"></div><br/>
+    <div>
+      <span style="horizontal-align:middle" class="example-val" id="event-start"></span>
+
+
+      <br/><input id='btnAuto' type="button" onclick="autotime();" value="Run"> </input>
+      
+      <input  type="button" onclick="javascript:if (lastSlideVal>0) showclouds(--lastSlideVal);" value="<<"> </input>
+      <input  type="button" onclick="javascript:if (lastSlideVal<(timeline_length-1)) showclouds(++lastSlideVal);" value=">>"> </input>
+    </div>
+          <script type="text/javascript">
+      $(function () {
+        $.getJSON("../results/topsalltime.json", jsonLoaded);
+      });
+      </script>
+
+</body>
+</html>
